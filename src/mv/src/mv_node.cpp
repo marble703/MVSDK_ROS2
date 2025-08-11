@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 
     RCLCPP_INFO(logger, "mv node initialized.");
 
-    std::string camera_config_path = "/home/chen/MV_example/config/camera.config";
+    std::string camera_config_path = "config/camera.config";
 
     Camera camera(camera_config_path);
     camera.init();
@@ -29,11 +29,11 @@ int main(int argc, char** argv) {
     sensor_msgs::msg::Image image_msg;
 
     while (rclcpp::ok()) {
-        auto start_time = std::chrono::steady_clock::now();
+        auto start_time = std::chrono::high_resolution_clock::now();
 
         // 获取图像
         cv::Mat frame = camera.get_frame();
-        // cv::waitKey(10);
+        cv::waitKey(10);
 
         // debug状态发布原始图像
         image_msg.header.stamp = node->now();
@@ -47,14 +47,14 @@ int main(int argc, char** argv) {
         memcpy(image_msg.data.data(), frame.data, size);
         image_publisher->publish(image_msg);
 
-        auto end_time = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
             end_time - start_time
         );
 
-        double fps = 1000.0 / duration.count();
+        double fps = 1000000.0 / duration.count();
 
-        RCLCPP_INFO(logger, "Time: {%ld}ms, FPS: {%lf}", duration.count(), fps);
+        RCLCPP_INFO(logger, "Time: {%ld}us, FPS: {%lf}", duration.count(), fps);
     }
     return 0;
 }
