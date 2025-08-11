@@ -123,10 +123,6 @@ void Camera::release() {
     std::cout << "Camera released" << std::endl;
 }
 
-bool Camera::is_locked() {
-    return this->mtx_get_frame.try_lock() == false;
-}
-
 cv::Mat Camera::get_frame() {
     // 如果相机未初始化
     if (this->init_tag == false) {
@@ -134,13 +130,12 @@ cv::Mat Camera::get_frame() {
         return cv::Mat();
     }
 
-    // // 如果相机获取图像时被锁
-    // if (this->mtx_get_frame.try_lock() == false) {
-    //     std::cerr << "Camera get frame is locked!" << std::endl;
-    //     return this->image;
-    // }
+    // 如果相机获取图像时被锁
+    if (this->mtx_get_frame.try_lock() == false) {
+        std::cerr << "Camera get frame is locked!" << std::endl;
+        return this->image;
+    }
 
-    // this->mtx_get_frame.lock();
     if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
         == CAMERA_STATUS_SUCCESS)
     {
@@ -158,7 +153,7 @@ cv::Mat Camera::get_frame() {
         CameraReleaseImageBuffer(hCamera, pbyBuffer);
         this->image = matImage;
 
-        // this->mtx_get_frame.unlock();
+        this->mtx_get_frame.unlock();
         return matImage;
     } else {
         std::cerr << "Camera get frame failed! Tried to use last image!"
@@ -166,12 +161,13 @@ cv::Mat Camera::get_frame() {
         if (this->image.empty()) {
             std::cerr << "Last image is empty, no image had been received!!!"
                       << std::endl;
-
-            cv::waitKey(20);
-            this->mtx_get_frame.unlock();
-        } else {
-            this->mtx_get_frame.unlock();
+        } else{
+            std::cout << "Last image is not empty, using it!" << std::endl;
+            std::cout << "It usually occurs when the camera is too busy." << std::endl;
         }
+        
+        this->mtx_get_frame.unlock();
+
         return this->image;
     }
 }

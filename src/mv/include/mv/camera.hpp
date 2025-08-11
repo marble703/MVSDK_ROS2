@@ -24,8 +24,8 @@ public:
     // 获取图像
     cv::Mat get_frame();
 
-    // 检查锁状态
-    bool is_locked();
+    // 图片获取互斥锁
+    std::mutex mtx_get_frame;
 
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
     void release();
@@ -57,6 +57,5 @@ private:
     // 曝光时间
     double exposure_time_;
 
-    // 图片获取互斥锁
-    std::mutex mtx_get_frame;
+
 };
