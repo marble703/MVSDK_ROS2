@@ -98,7 +98,7 @@ bool Camera::init() {
         std::cout << "Camera parameter read success" << std::endl;
     }
     this->init_tag = true;
-    this->image = this->get_frame().clone();
+    this->image = this->get_frame();
     if (this->image.empty()) {
         std::cerr << "First try to get frame failed!" << std::endl;
         return false;
@@ -109,20 +109,28 @@ bool Camera::init() {
     return true;
 }
 
-void Camera::set_exposure_time(double exposure_time) {
+// TODO: 读一下SDK, 写异常处理
+bool Camera::set_exposure_time(double exposure_time) {
     if (exposure_time < 0) {
         exposure_time = this->exposure_time_;
     }
     CameraSetExposureTime(hCamera, exposure_time);
     std::cout << "Exposure time set to " << exposure_time << std::endl;
+    return true;
 }
 
 void Camera::release() {
     CameraUnInit(hCamera);
     free(g_pRgbBuffer);
     std::cout << "Camera released" << std::endl;
-}
 
+    // TODO: 检查一下其他的，虽然感觉没用
+    // 重置相机状态
+    this->init_tag = false;
+    this->iCameraCounts = 1;
+    this->iStatus = -1;
+    this->image = cv::Mat();
+}
 cv::Mat Camera::get_frame() {
     // 如果相机未初始化
     if (this->init_tag == false) {
@@ -136,36 +144,47 @@ cv::Mat Camera::get_frame() {
         return this->image;
     }
 
+    // 正常获取到图像
     if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
         == CAMERA_STATUS_SUCCESS)
     {
         CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
         std::cout << "Camera get frame success" << std::endl;
 
-        cv::Mat matImage(
-            cv::Size(sFrameInfo.iWidth, sFrameInfo.iHeight),
-            CV_8UC3,
-            g_pRgbBuffer
-        );
+        cv::Mat(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3, g_pRgbBuffer)
+            .copyTo(this->image);
 
-        //在成功调用CameraGetImageBuffer后，必须调用CameraReleaseImageBuffer来释放获得的buffer。
-        //否则再次调用CameraGetImageBuffer时，程序将被挂起一直阻塞，直到其他线程中调用CameraReleaseImageBuffer来释放了buffer
+        // 如果你认为相机节点无法运行，可以启用这个代码看一下
+        // cv::imshow("Camera Image", this->image);
+        // cv::waitKey(1);
+
+        // 在成功调用 CameraGetImageBuffer 后，必须调用 CameraReleaseImageBuffer 来释放获得的 buffer 。
+        // 否则再次调用 CameraGetImageBuffer 时，程序将被挂起一直阻塞
+        // 直到其他线程中调用 CameraReleaseImageBuffer 来释放 buffer
         CameraReleaseImageBuffer(hCamera, pbyBuffer);
-        this->image = matImage;
 
         this->mtx_get_frame.unlock();
-        return matImage;
-    } else {
+        return this->image;
+    }
+    // 读取失败
+    else
+    {
         std::cerr << "Camera get frame failed! Tried to use last image!"
                   << std::endl;
+        // 从未读取到图像
         if (this->image.empty()) {
             std::cerr << "Last image is empty, no image had been received!!!"
                       << std::endl;
-        } else{
-            std::cout << "Last image is not empty, using it!" << std::endl;
-            std::cout << "It usually occurs when the camera is too busy." << std::endl;
         }
-        
+        // 读到过图像，退化为输出上一次读取到的图像
+        // 这一般是读取频率过高导致
+        else
+        {
+            std::cout << "Last image is not empty, using it!" << std::endl;
+            std::cout << "It usually occurs when the camera is too busy."
+                      << std::endl;
+        }
+
         this->mtx_get_frame.unlock();
 
         return this->image;

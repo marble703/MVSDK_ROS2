@@ -9,6 +9,8 @@
 
 class Camera {
 public:
+    enum GetFrameStatus { SUCCESS = 0, LAST, TIMEOUT, LOCKED, ERROR };
+
     Camera(
         std::string camera_config_path = "./config/camera.config",
         double exposure_time = -1
@@ -19,16 +21,16 @@ public:
     bool init();
 
     // 设置曝光时间
-    void set_exposure_time(double exposure_time = -1);
+    bool set_exposure_time(double exposure_time = -1);
 
     // 获取图像
     cv::Mat get_frame();
 
-    // 图片获取互斥锁
-    std::mutex mtx_get_frame;
-
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
     void release();
+
+    // 互斥锁，保护获取图像操作
+    std::mutex mtx_get_frame;
 
 private:
     // 监控是否重初始化的变量
@@ -56,6 +58,4 @@ private:
 
     // 曝光时间
     double exposure_time_;
-
-
 };

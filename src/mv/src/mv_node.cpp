@@ -6,6 +6,7 @@
 #include <rclcpp/qos.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <std_msgs/msg/float32.hpp>
 
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
@@ -28,12 +29,20 @@ int main(int argc, char** argv) {
         );
     sensor_msgs::msg::Image image_msg;
 
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr
+        duration_time_publisher =
+            node->create_publisher<std_msgs::msg::Float32>(
+                "mv/duration_time",
+                rclcpp::SystemDefaultsQoS()
+            );
+    std_msgs::msg::Float32 duration_msg;
+
     while (rclcpp::ok()) {
         auto start_time = std::chrono::high_resolution_clock::now();
 
         // 获取图像
         cv::Mat frame = camera.get_frame();
-        cv::waitKey(10);
+        cv::waitKey(1);
 
         // debug状态发布原始图像
         image_msg.header.stamp = node->now();
@@ -54,7 +63,10 @@ int main(int argc, char** argv) {
 
         double fps = 1000000.0 / duration.count();
 
+        // 实际使用可以改为 DEBUG
         RCLCPP_INFO(logger, "Time: {%ld}us, FPS: {%lf}", duration.count(), fps);
+        duration_msg.data = duration.count();
+        duration_time_publisher->publish(duration_msg);
     }
     return 0;
 }
