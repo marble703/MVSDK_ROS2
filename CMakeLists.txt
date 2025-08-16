@@ -21,6 +21,8 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(cv_bridge REQUIRED)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -32,15 +34,44 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   src/mv/src/camera.cpp
 )
 
+# 添加图像录制节点
+ament_auto_add_executable(${PROJECT_NAME}_recorder_node
+  src/mv/src/image_recorder_node.cpp
+)
+
 target_include_directories(${PROJECT_NAME}_node PRIVATE
   ${OpenCV_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/src/mv/include
 )
 
+target_include_directories(${PROJECT_NAME}_recorder_node PRIVATE
+  ${OpenCV_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/src/mv/include
+)
+
+# 找 MV 驱动
+# 理论上删掉这段也可以编译
+# 但是我重装了之后会编译错误，所以保留
+find_path(MVSDK_INCLUDE_DIR
+  NAMES CameraApi.h
+  HINTS /usr/include/mindvision /usr/local/include/mindvision /usr/local/include /usr/include
+)
+if(MVSDK_INCLUDE_DIR)
+  message(STATUS "Found MVSDK include dir: ${MVSDK_INCLUDE_DIR}")
+  target_include_directories(${PROJECT_NAME}_node PRIVATE ${MVSDK_INCLUDE_DIR})
+  target_include_directories(${PROJECT_NAME}_recorder_node PRIVATE ${MVSDK_INCLUDE_DIR})
+else()
+  message(WARNING "Could not locate MindVision SDK.")
+endif()
+
 target_link_libraries(${PROJECT_NAME}_node
   ${OpenCV_LIBS}
   MVSDK
+)
+
+target_link_libraries(${PROJECT_NAME}_recorder_node
+  ${OpenCV_LIBS}
 )
 
 ament_target_dependencies(${PROJECT_NAME}_node
@@ -48,6 +79,13 @@ ament_target_dependencies(${PROJECT_NAME}_node
   std_msgs
   geometry_msgs
   sensor_msgs
+)
+
+ament_target_dependencies(${PROJECT_NAME}_recorder_node
+  rclcpp
+  sensor_msgs
+  std_srvs
+  cv_bridge
 )
 
 # 安装配置和启动文件

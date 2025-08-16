@@ -1,5 +1,7 @@
 # mindvision SDK ROS2 开发记录
 
+## 开发中，不保证可用
+
 ## 开发/测试环境
 ubuntu 22.04
 ros-humble
@@ -46,6 +48,10 @@ cd mindvision-sdk && sudo bash ./install.sh && cd ..
 rm -r mindvision-sdk
 ```
 
+## 录制工具
+
+参见[RECORDER_README.md](./RECORDER_README.md)
+
 ## 注意事项
 
 在快于最大 FPS 的时间间隔下读取缓冲区会读取失败，这里包装了一层，会使用上一帧代替并警告
@@ -54,5 +60,3 @@ rm -r mindvision-sdk
 该脚本会重设 python 环境，可以解决 conda 造成的 python 解释器问题
 
 该脚本适配了 `zsh` 和 `bash`
-
-## 开发中
