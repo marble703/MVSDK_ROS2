@@ -23,16 +23,16 @@ public:
     bool init();
 
     // 设置曝光时间
-    bool set_exposure_time(double exposure_time = -1);
+    bool setExposureTime(double exposure_time = -1);
 
     // 获取图像
-    cv::Mat get_frame();
+    cv::Mat getFrame();
 
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
     void release();
 
     // 互斥锁，保护获取图像操作
-    std::mutex mtx_get_frame;
+    std::mutex mtx_getFrame;
 
 private:
     // 监控是否重初始化的变量

@@ -100,7 +100,7 @@ bool Camera::init() {
         std::cout << "Camera parameter read success" << std::endl;
     }
     this->init_tag = true;
-    this->image = this->get_frame();
+    this->image = this->getFrame();
     if (this->image.empty()) {
         std::cerr << "First try to get frame failed!" << std::endl;
         return false;
@@ -112,7 +112,7 @@ bool Camera::init() {
 }
 
 // TODO: 读一下SDK, 写异常处理
-bool Camera::set_exposure_time(double exposure_time) {
+bool Camera::setExposureTime(double exposure_time) {
     if (exposure_time < 0) {
         exposure_time = this->exposure_time_;
     }
@@ -126,14 +126,14 @@ void Camera::release() {
     free(g_pRgbBuffer);
     std::cout << "Camera released" << std::endl;
 
-    // TODO: 检查一下其他的，虽然感觉没用
+    // TODO: 检查一下其他的，虽然感觉没用，因为释放之后应该类会析构
     // 重置相机状态
     this->init_tag = false;
     this->iCameraCounts = 1;
     this->iStatus = -1;
     this->image = cv::Mat();
 }
-cv::Mat Camera::get_frame() {
+cv::Mat Camera::getFrame() {
     // 如果相机未初始化
     if (this->init_tag == false) {
         std::cerr << "Camera not initialized!" << std::endl;
@@ -141,7 +141,7 @@ cv::Mat Camera::get_frame() {
     }
 
     // 如果相机获取图像时被锁
-    if (this->mtx_get_frame.try_lock() == false) {
+    if (this->mtx_getFrame.try_lock() == false) {
         std::cerr << "Camera get frame is locked!" << std::endl;
         return this->image;
     }
@@ -166,7 +166,7 @@ cv::Mat Camera::get_frame() {
         // 直到其他线程中调用 CameraReleaseImageBuffer 来释放 buffer
         CameraReleaseImageBuffer(hCamera, pbyBuffer);
 
-        this->mtx_get_frame.unlock();
+        this->mtx_getFrame.unlock();
         return this->image;
     }
     // 读取失败
@@ -188,7 +188,7 @@ cv::Mat Camera::get_frame() {
                       << std::endl;
         }
 
-        this->mtx_get_frame.unlock();
+        this->mtx_getFrame.unlock();
 
         return this->image;
     }

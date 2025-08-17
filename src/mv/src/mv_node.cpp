@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
         auto start_time = std::chrono::high_resolution_clock::now();
 
         // 获取图像
-        cv::Mat frame = camera.get_frame();
+        cv::Mat frame = camera.getFrame();
         cv::waitKey(1);
 
         // debug状态发布原始图像
