@@ -12,13 +12,13 @@ def generate_launch_description():
         default_value='recorded_images',
         description='Output directory for recorded images'
     )
-    
+
     image_format_arg = DeclareLaunchArgument(
         'image_format',
         default_value='jpg',
         description='Image format for recorded images (jpg, png, etc.)'
     )
-    
+
     auto_start_recording_arg = DeclareLaunchArgument(
         'auto_start_recording',
         default_value='false',
@@ -35,7 +35,7 @@ def generate_launch_description():
             # 可以在这里添加相机参数, 但是现在还没写
         ]
     )
-    
+
     # 录制节点
     recorder_node = Node(
         package='mv',
