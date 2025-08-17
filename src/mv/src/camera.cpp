@@ -17,14 +17,16 @@ Camera::~Camera() {
 }
 
 bool Camera::init() {
+    // 避免重初始化
     if (!this->init_tag) {
         std::cout << "Camera init start" << std::endl;
-    }
-    if (this->init_tag) {
+    } else {
         std::cout << "Tried to reinitialize camera!" << std::endl;
         return true;
     }
-    // 打开相机
+
+    // 初始化 mv SDK
+    // TODO: 设置全局初始化检查，这个只需要初始化一次
     CameraSdkInit(1);
     // 枚举设备，建立设备列表
     iStatus = CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
@@ -148,6 +150,7 @@ cv::Mat Camera::get_frame() {
     if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
         == CAMERA_STATUS_SUCCESS)
     {
+        // 处理图像
         CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
         std::cout << "Camera get frame success" << std::endl;
 

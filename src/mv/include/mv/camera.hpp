@@ -1,11 +1,13 @@
 #pragma once
 
-#include "CameraApi.h" // IWYU pragma: keep 相机SDK的API头文件
-#include <memory>
-#include <opencv2/opencv.hpp>
-#include <rclcpp/rclcpp.hpp>
+// 相机SDK的API头文件
+#include "CameraApi.h" // IWYU pragma: keep (防止 clangd 静态分析报错)
 
+#include <opencv2/opencv.hpp>
+
+#include <iostream>
 #include <mutex>
+#include <thread>
 
 class Camera {
 public:
