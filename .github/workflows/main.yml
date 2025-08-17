@@ -1,0 +1,45 @@
+name: ROS2-Humble
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install ROS 2 Humble
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl gnupg lsb-release
+        sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y ros-humble-desktop
+
+    - name: Install rosdep
+      run: |
+        sudo apt install python3-rosdep -y
+        sudo rosdep init || true
+        rosdep update
+        rosdep install --from-paths . --ignore-src -r -y
+
+    - name: Install MindVision SDK
+      run: |
+        mkdir mindvision-sdk
+        wget https://www.mindvision.com.cn/wp-content/uploads/2023/08/linuxSDK_V2.1.0.37.tar.gz -O mindvision-sdk/SDK.tar.gz
+        tar -zxvf mindvision-sdk/SDK.tar.gz --directory=mindvision-sdk
+        cd mindvision-sdk && sudo bash ./install.sh && cd ..
+        rm -r mindvision-sdk
+
+    - name: Build project
+      run: |
+        source /opt/ros/humble/setup.bash
+        colcon build --symlink-install
