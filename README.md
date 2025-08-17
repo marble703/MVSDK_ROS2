@@ -2,11 +2,13 @@
 
 ## 开发中，不保证可用
 
-## 开发/测试环境
+## 开发/测试环境与设备
 ubuntu 22.04
 ros-humble
 cmake 3.22.1
 gcc 11.4.0
+
+MindVision SUA133GC
 
 ## 安装方法
 
@@ -18,7 +20,7 @@ gcc 11.4.0
 wget http://fishros.com/install -O fishros && . fishros
 ```
 
-或者(不保证成功)
+或者
 
 ```bash
 # ros-humble-desktop
@@ -38,6 +40,8 @@ rosdep install --from-paths . --ignore-src -r -y
 
 ### mindvision-sdk
 
+可在[这里](https://www.mindvision.com.cn/category/software/sdk-installation-package/)找到
+
 ```bash
 mkdir mindvision-sdk
 wget https://www.mindvision.com.cn/wp-content/uploads/2023/08/linuxSDK_V2.1.0.37.tar.gz -O mindvision-sdk/SDK.tar.gz
@@ -54,9 +58,28 @@ rm -r mindvision-sdk
 
 ## 注意事项
 
-在快于最大 FPS 的时间间隔下读取缓冲区会读取失败，这里包装了一层，会使用上一帧代替并警告
+在快于最大 FPS 的时间间隔下读取缓冲区会读取失败，这里包装了一层，会输出上一帧代替并警告
 
 如果出现奇怪的依赖问题，可以尝试运行 `setup_env.sh` 
 该脚本会重设 python 环境，可以解决 conda 造成的 python 解释器问题
 
-该脚本适配了 `zsh` 和 `bash`
+此脚本适配了 `zsh` 和 `bash`
+
+[MindVision工业相机开发手册](
+https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%B8%9A%E7%9B%B8%E6%9C%BA%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C.pdf)
+
+## TODO： 
+
+原画面内录设置[](CameraSetDataDirectory CameraSaveImage)
+
+被动获取图像[](CameraSetCallbackFunction)
+
+硬件 ROI
+
+更多参数接口(白平衡/饱和度/gamma/增益...)
+
+黑白相机支持(mono sensor)
+
+多相机支持
+
+昵称修改读取
