@@ -27,19 +27,21 @@ jobs:
     - name: Install rosdep
       run: |
         sudo apt install python3-rosdep -y
-        sudo rosdep init || true
+        if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+          sudo rosdep init
+        fi
         rosdep update
-        rosdep install --from-paths . --ignore-src -r -y
+        rosdep install --from-paths src --ignore-src -r -y || true
 
     - name: Install MindVision SDK
       run: |
         mkdir mindvision-sdk
         wget https://www.mindvision.com.cn/wp-content/uploads/2023/08/linuxSDK_V2.1.0.37.tar.gz -O mindvision-sdk/SDK.tar.gz
         tar -zxvf mindvision-sdk/SDK.tar.gz --directory=mindvision-sdk
-        cd mindvision-sdk && sudo bash ./install.sh && cd ..
-        rm -r mindvision-sdk
+        cd mindvision-sdk && chmod +x ./install.sh && sudo ./install.sh && cd ..
+        rm -rf mindvision-sdk
 
     - name: Build project
       run: |
         source /opt/ros/humble/setup.bash
-        colcon build --symlink-install
+        colcon build --symlink-install --cmake-args -DCMAKE_PREFIX_PATH=/usr/local
