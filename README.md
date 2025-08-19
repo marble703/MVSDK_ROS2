@@ -2,6 +2,10 @@
 
 ## 开发中，不保证可用
 
+此 ci 仅显示编译状态
+
+[![ROS2-Humble](https://github.com/marble703/MVSDK_ROS2/actions/workflows/main.yml/badge.svg)](https://github.com/marble703/MVSDK_ROS2/actions/workflows/main.yml)
+
 ## 开发/测试环境与设备
 ubuntu 22.04
 ros-humble
@@ -70,9 +74,9 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 
 ## TODO： 
 
-原画面内录设置[](CameraSetDataDirectory CameraSaveImage)
+原画面内录设置[](CameraSetDataDirectory/CameraSaveImage)
 
-被动获取图像[](CameraSetCallbackFunction)
+被动获取图像[](CameraSetCallbackFunction)和触发读取分离
 
 硬件 ROI
 
