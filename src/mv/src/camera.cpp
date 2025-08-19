@@ -1,15 +1,21 @@
 #include <mv/camera.hpp>
 
-Camera::Camera(std::string camera_config_path, double exposure_time):
-    camera_config_path_(camera_config_path) {
-    this->exposure_time_ = exposure_time;
-
+Camera::Camera(
+    std::string camera_config_path,
+    std::shared_ptr<cv::Mat> frame_ptr,
+    double exposure_time
+):
+    camera_config_path_(camera_config_path),
+    frame_ptr_(frame_ptr),
+    exposure_time_(exposure_time) {
     this->init_tag = false;
     this->iCameraCounts = 1;
     this->iStatus = -1;
 
     this->image = cv::Mat();
     this->channel = 3;
+
+    init();
 }
 
 Camera::~Camera() {
@@ -64,8 +70,8 @@ bool Camera::init() {
     // 初始化失败
     std::cout << "state = " << iStatus << std::endl;
     if (iStatus != CAMERA_STATUS_SUCCESS) {
-        std::cerr << "Camera init failed!(>_<)!" << std::endl;
-        // exit(-1);
+        // std::cerr << "Camera init failed!(>_<)!" << std::endl;
+        exit(-1);
     }
 
     // 获得相机的特性描述结构体。该结构体中包含了相机可设置的各种参数的范围信息。决定了相关函数的参数
@@ -82,6 +88,7 @@ bool Camera::init() {
     */
     // 识别相机模式
     CameraPlay(hCamera);
+    // 由于我们没有黑白相机可供测试，这里直接退出
     if (tCapability.sIspCapacity.bMonoSensor) {
         channel = 1;
         std::cerr << "Camera is mono sensor!(>_<)!" << std::endl;
@@ -133,26 +140,63 @@ void Camera::release() {
     this->iStatus = -1;
     this->image = cv::Mat();
 }
-cv::Mat Camera::getFrame() {
+
+void Camera::readFrame(std::shared_ptr<int> status) {
     // 如果相机未初始化
     if (this->init_tag == false) {
-        std::cerr << "Camera not initialized!" << std::endl;
-        return cv::Mat();
+        // std::cerr << "Camera not initialized properly!" << std::endl;
+        if (status != nullptr) {
+            *status = mindvision::ReadFrameStatus::UNINIT;
+        }
+        return;
     }
 
+    // TODO: 传入一个选项来判断使用 while 等待直到获取到还是使用 if 直接返回
     // 如果相机获取图像时被锁
     if (this->mtx_getFrame.try_lock() == false) {
-        std::cerr << "Camera get frame is locked!" << std::endl;
-        return this->image;
+        std::cerr << "locked when camera read frame!" << std::endl;
+        if (status != nullptr) {
+            *status = mindvision::ReadFrameStatus::LOCKED;
+        }
+        return;
+    }
+
+    // 读取失败
+    if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
+        != CAMERA_STATUS_SUCCESS)
+    {
+        std::cerr << "Camera get frame failed! Tried to use last image!"
+                  << std::endl;
+        // 从未读取到图像
+        if (this->image.empty()) {
+            std::cerr << "Last image is empty, no image had been received!!!"
+                      << std::endl;
+            if (status != nullptr) {
+                *status = mindvision::ReadFrameStatus::UNKNOWN;
+            }
+            this->mtx_getFrame.unlock();
+            return;
+        }
+        // 读到过图像，退化为使用上一次读取到的图像
+        // TODO: 加一个时间戳，超时则不使用
+        // 这一般是读取频率过高导致
+        else
+        {
+            std::cout << "Last image is not empty, using it!" << std::endl;
+            if (status != nullptr) {
+                *status = mindvision::ReadFrameStatus::LAST;
+            }
+        }
+
+        this->mtx_getFrame.unlock();
+        return;
     }
 
     // 正常获取到图像
-    if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
-        == CAMERA_STATUS_SUCCESS)
+    else
     {
         // 处理图像
         CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
-        std::cout << "Camera get frame success" << std::endl;
 
         cv::Mat(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3, g_pRgbBuffer)
             .copyTo(this->image);
@@ -167,29 +211,49 @@ cv::Mat Camera::getFrame() {
         CameraReleaseImageBuffer(hCamera, pbyBuffer);
 
         this->mtx_getFrame.unlock();
-        return this->image;
+        if (status != nullptr) {
+            // *status = mindvision::ReadFrameStatus::SUCCESS;
+        }
+        return;
     }
-    // 读取失败
-    else
-    {
-        std::cerr << "Camera get frame failed! Tried to use last image!"
-                  << std::endl;
-        // 从未读取到图像
-        if (this->image.empty()) {
-            std::cerr << "Last image is empty, no image had been received!!!"
-                      << std::endl;
-        }
-        // 读到过图像，退化为输出上一次读取到的图像
-        // 这一般是读取频率过高导致
-        else
-        {
-            std::cout << "Last image is not empty, using it!" << std::endl;
-            std::cout << "It usually occurs when the camera is too busy."
-                      << std::endl;
-        }
+}
 
+// TODO: 优化读写锁
+cv::Mat Camera::getFrame() {
+    while (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera get frame!" << std::endl;
+    }
+    if (image.empty()) {
         this->mtx_getFrame.unlock();
-
-        return this->image;
+        std::cerr << "No image available!" << std::endl;
+        return cv::Mat();
     }
+    this->mtx_getFrame.unlock();
+
+    return image.clone();
+}
+
+void Camera::getFrame(std::shared_ptr<cv::Mat> frame_ptr) {
+    while (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera get frame!" << std::endl;
+    }
+    if (image.empty()) {
+        std::cerr << "No image available!" << std::endl;
+        return;
+    }
+    *frame_ptr = image.clone();
+    this->mtx_getFrame.unlock();
+}
+
+std::shared_ptr<const cv::Mat> Camera::getFramePtr() {
+    while (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera get frame!" << std::endl;
+    }
+    if (image.empty()) {
+        std::cerr << "No image available!" << std::endl;
+        return nullptr;
+    }
+    auto frame_ptr = std::make_shared<cv::Mat>(image);
+    this->mtx_getFrame.unlock();
+    return frame_ptr;
 }
