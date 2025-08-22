@@ -10,8 +10,16 @@
 #include <thread>
 
 namespace mindvision {
-enum ReadFrameStatus { SUCCESS = 0, LAST, TIMEOUT, LOCKED, UNINIT, UNKNOWN };
+enum ReadFrameStatus {
+    SUCCESS = 0, // 成功
+    LAST,        // 使用上一帧(由于当次未正确读取)
+    TIMEOUT,     // 相机读取超时(未启用)
+    LOCKED,      // 相机对象缓冲区被锁定
+    UNINIT,      // 相机未初始化
+    UNKNOWN      // 未知错误
+};
 }
+
 class Camera {
 public:
     Camera(
@@ -84,6 +92,8 @@ private:
     // 图像信息
     cv::Mat image;
     std::shared_ptr<cv::Mat> frame_ptr_;
+    std::chrono::time_point<std::chrono::high_resolution_clock>
+        last_frame_time_;
     int channel;
     // 曝光时间
     double exposure_time_;

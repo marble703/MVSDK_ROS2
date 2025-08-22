@@ -13,6 +13,7 @@ Camera::Camera(
     this->iStatus = -1;
 
     this->image = cv::Mat();
+    this->last_frame_time_ = std::chrono::high_resolution_clock::now();
     this->channel = 3;
 
     init();
@@ -201,6 +202,8 @@ void Camera::readFrame(std::shared_ptr<int> status) {
         cv::Mat(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3, g_pRgbBuffer)
             .copyTo(this->image);
 
+        this->last_frame_time_ = std::chrono::high_resolution_clock::now();
+
         // 如果你认为相机节点无法运行，可以启用这个代码看一下
         // cv::imshow("Camera Image", this->image);
         // cv::waitKey(1);
@@ -212,13 +215,13 @@ void Camera::readFrame(std::shared_ptr<int> status) {
 
         this->mtx_getFrame.unlock();
         if (status != nullptr) {
-            // *status = mindvision::ReadFrameStatus::SUCCESS;
+            *status = mindvision::ReadFrameStatus::SUCCESS;
         }
         return;
     }
 }
 
-// TODO: 优化读写锁
+// TODO: 优化读写锁(无锁/锁/共享锁)
 cv::Mat Camera::getFrame() {
     while (this->mtx_getFrame.try_lock() == false) {
         std::cerr << "locked when camera get frame!" << std::endl;
