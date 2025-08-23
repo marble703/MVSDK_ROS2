@@ -1,27 +1,34 @@
 #include <mv/camera.hpp>
 
-Camera::Camera(std::string camera_config_path, double exposure_time):
-    camera_config_path_(camera_config_path) {
-    this->exposure_time_ = exposure_time;
-
+Camera::Camera(
+    std::string camera_config_path,
+    std::shared_ptr<cv::Mat> frame_ptr,
+    double exposure_time
+):
+    camera_config_path_(camera_config_path),
+    frame_ptr_(frame_ptr),
+    exposure_time_(exposure_time) {
     this->init_tag = false;
     this->iCameraCounts = 1;
     this->iStatus = -1;
 
     this->image = cv::Mat();
+    this->last_frame_time_ = std::chrono::high_resolution_clock::now();
     this->channel = 3;
+
+    init();
 }
 
 Camera::~Camera() {
     this->release();
 }
 
-bool Camera::init() {
+bool Camera::init(int try_reinit_time, int wait_init_time) {
     // 避免重初始化
     if (!this->init_tag) {
         std::cout << "Camera init start" << std::endl;
     } else {
-        std::cout << "Tried to reinitialize camera!" << std::endl;
+        std::cout << "Tried to reinitialize camera, skip!" << std::endl;
         return true;
     }
 
@@ -34,24 +41,27 @@ bool Camera::init() {
     std::cout << "count = " << iCameraCounts << std::endl;
     // 如果没有连接设备
     if (iCameraCounts == 0) {
-        bool flag = false;
+        bool camera_detected_flag = false;
         int fail_count = 1;
-        // 重试10次，每次间隔500ms
-        while (fail_count < 10) {
+        // 尝试重新连接
+        while (fail_count < try_reinit_time) {
             std::cerr << "No camera detected! Retry " << fail_count << " times"
                       << std::endl;
 
             CameraSdkInit(1);
             iStatus = CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
             if (iCameraCounts != 0) {
-                std::cout << "Camera detected!" << std::endl;
-                flag = true;
+                std::cout << "Camera detected while reinitializing!"
+                          << std::endl;
+                camera_detected_flag = true;
                 break;
             }
             fail_count++;
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(wait_init_time)
+            );
         }
-        if (flag == false) {
+        if (camera_detected_flag == false) {
             std::cerr << "No camera detected!(>_<)!" << std::endl;
             exit(-1);
         }
@@ -59,13 +69,18 @@ bool Camera::init() {
 
     // 相机初始化。初始化成功后，才能调用任何其他相机相关的操作接口
     iStatus = CameraInit(&tCameraEnumList, -1, -1, &hCamera);
+
+    PrintCameraDeviceInfo(&tCameraEnumList);
+
+    std::cout << "Camera name: " << this->ReadCameraName() << std::endl;
+
     CameraSetAeState(hCamera, false);
 
     // 初始化失败
     std::cout << "state = " << iStatus << std::endl;
     if (iStatus != CAMERA_STATUS_SUCCESS) {
         std::cerr << "Camera init failed!(>_<)!" << std::endl;
-        // exit(-1);
+        exit(-1);
     }
 
     // 获得相机的特性描述结构体。该结构体中包含了相机可设置的各种参数的范围信息。决定了相关函数的参数
@@ -82,6 +97,7 @@ bool Camera::init() {
     */
     // 识别相机模式
     CameraPlay(hCamera);
+    // 由于我们没有黑白相机可供测试，这里直接退出
     if (tCapability.sIspCapacity.bMonoSensor) {
         channel = 1;
         std::cerr << "Camera is mono sensor!(>_<)!" << std::endl;
@@ -100,7 +116,7 @@ bool Camera::init() {
         std::cout << "Camera parameter read success" << std::endl;
     }
     this->init_tag = true;
-    this->image = this->get_frame();
+    this->image = this->getFrame();
     if (this->image.empty()) {
         std::cerr << "First try to get frame failed!" << std::endl;
         return false;
@@ -112,7 +128,8 @@ bool Camera::init() {
 }
 
 // TODO: 读一下SDK, 写异常处理
-bool Camera::set_exposure_time(double exposure_time) {
+bool Camera::setExposureTime(double exposure_time) {
+    // 非法曝光时间
     if (exposure_time < 0) {
         exposure_time = this->exposure_time_;
     }
@@ -126,36 +143,75 @@ void Camera::release() {
     free(g_pRgbBuffer);
     std::cout << "Camera released" << std::endl;
 
-    // TODO: 检查一下其他的，虽然感觉没用
+    // TODO: 检查一下其他的，虽然感觉没用，因为释放之后应该类会析构
     // 重置相机状态
     this->init_tag = false;
     this->iCameraCounts = 1;
     this->iStatus = -1;
     this->image = cv::Mat();
 }
-cv::Mat Camera::get_frame() {
+
+void Camera::readFrame(std::shared_ptr<int> status) {
     // 如果相机未初始化
     if (this->init_tag == false) {
-        std::cerr << "Camera not initialized!" << std::endl;
-        return cv::Mat();
+        // std::cerr << "Camera not initialized properly!" << std::endl;
+        if (status != nullptr) {
+            *status = mindvision::ReadFrameStatus::UNINIT;
+        }
+        return;
     }
 
+    // TODO: 传入一个选项来判断使用 while 等待直到获取到还是使用 if 直接返回
     // 如果相机获取图像时被锁
-    if (this->mtx_get_frame.try_lock() == false) {
-        std::cerr << "Camera get frame is locked!" << std::endl;
-        return this->image;
+    if (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera read frame!" << std::endl;
+        if (status != nullptr) {
+            *status = mindvision::ReadFrameStatus::LOCKED;
+        }
+        return;
+    }
+
+    // 读取失败
+    if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
+        != CAMERA_STATUS_SUCCESS)
+    {
+        std::cerr << "Camera get frame failed! Tried to use last image!"
+                  << std::endl;
+        // 从未读取到图像
+        if (this->image.empty()) {
+            std::cerr << "Last image is empty, no image had been received!!!"
+                      << std::endl;
+            if (status != nullptr) {
+                *status = mindvision::ReadFrameStatus::UNKNOWN;
+            }
+            this->mtx_getFrame.unlock();
+            return;
+        }
+        // 读到过图像，退化为使用上一次读取到的图像
+        // TODO: 加一个时间戳，超时则不使用
+        // 这一般是读取频率过高导致
+        else
+        {
+            std::cout << "Last image is not empty, using it!" << std::endl;
+            if (status != nullptr) {
+                *status = mindvision::ReadFrameStatus::LAST;
+            }
+        }
+
+        this->mtx_getFrame.unlock();
+        return;
     }
 
     // 正常获取到图像
-    if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
-        == CAMERA_STATUS_SUCCESS)
+    else
     {
         // 处理图像
         CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
-        std::cout << "Camera get frame success" << std::endl;
 
         cv::Mat(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3, g_pRgbBuffer)
             .copyTo(this->image);
+
+        this->last_frame_time_ = std::chrono::high_resolution_clock::now();
 
         // 如果你认为相机节点无法运行，可以启用这个代码看一下
         // cv::imshow("Camera Image", this->image);
@@ -166,30 +222,102 @@ cv::Mat Camera::get_frame() {
         // 直到其他线程中调用 CameraReleaseImageBuffer 来释放 buffer
         CameraReleaseImageBuffer(hCamera, pbyBuffer);
 
-        this->mtx_get_frame.unlock();
-        return this->image;
+        this->mtx_getFrame.unlock();
+        if (status != nullptr) {
+            *status = mindvision::ReadFrameStatus::SUCCESS;
+        }
+        return;
     }
-    // 读取失败
-    else
-    {
-        std::cerr << "Camera get frame failed! Tried to use last image!"
-                  << std::endl;
-        // 从未读取到图像
-        if (this->image.empty()) {
-            std::cerr << "Last image is empty, no image had been received!!!"
-                      << std::endl;
-        }
-        // 读到过图像，退化为输出上一次读取到的图像
-        // 这一般是读取频率过高导致
-        else
-        {
-            std::cout << "Last image is not empty, using it!" << std::endl;
-            std::cout << "It usually occurs when the camera is too busy."
-                      << std::endl;
-        }
+}
 
-        this->mtx_get_frame.unlock();
+// TODO: 优化读写锁(无锁/锁/共享锁)
+cv::Mat Camera::getFrame() {
+    while (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera get frame!" << std::endl;
+    }
+    if (image.empty()) {
+        this->mtx_getFrame.unlock();
+        std::cerr << "No image available!" << std::endl;
+        return cv::Mat();
+    }
+    this->mtx_getFrame.unlock();
 
-        return this->image;
+    return image.clone();
+}
+
+void Camera::getFrame(std::shared_ptr<cv::Mat> frame_ptr) {
+    while (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera get frame!" << std::endl;
+    }
+    if (image.empty()) {
+        std::cerr << "No image available!" << std::endl;
+        return;
+    }
+    *frame_ptr = image.clone();
+    this->mtx_getFrame.unlock();
+}
+
+std::shared_ptr<const cv::Mat> Camera::getFramePtr() {
+    while (this->mtx_getFrame.try_lock() == false) {
+        std::cerr << "locked when camera get frame!" << std::endl;
+    }
+    if (image.empty()) {
+        std::cerr << "No image available!" << std::endl;
+        return nullptr;
+    }
+    auto frame_ptr = std::make_shared<cv::Mat>(image);
+    this->mtx_getFrame.unlock();
+    return frame_ptr;
+}
+
+void Camera::PrintCameraDeviceInfo(const tSdkCameraDevInfo* info) {
+    if (info == NULL) {
+        printf("Error: Camera info pointer is NULL.\n");
+        return;
+    }
+
+    printf("\n=== Camera Device Information ===\n");
+    printf("Product Series:    %s\n", info->acProductSeries);
+    printf("Product Name:      %s\n", info->acProductName);
+    printf("Friendly Name:     %s\n", info->acFriendlyName);
+    printf("Link Name:         %s\n", info->acLinkName);
+    printf("Driver Version:    %s\n", info->acDriverVersion);
+    printf("Sensor Type:       %s\n", info->acSensorType);
+    printf("Port Type:         %s\n", info->acPortType);
+    printf("Serial Number (SN): %s\n", info->acSn);
+    printf("Instance Index:    %u\n", info->uInstance);
+    printf("=================================\n\n");
+}
+
+void Camera::SetCameraName(std::string name) {
+    if (CameraSetFriendlyName(hCamera, name.data()) != CAMERA_STATUS_SUCCESS) {
+        std::cerr << "Failed to set camera name!" << std::endl;
+    } else {
+        this->camera_name_ = name;
+    }
+}
+
+std::string Camera::ReadCameraName() {
+    char name[32] = { 0 };
+    // 获取失败
+    if (CameraGetFriendlyName(hCamera, name) != CAMERA_STATUS_SUCCESS) {
+        std::cerr << "Failed to get camera name!" << std::endl;
+        return "";
+    } else { // 获取成功
+        this->camera_name_ = name;
+        for (unsigned char c: name) {
+            if (c >= 32 && c <= 126) {
+                // 可打印字符
+            } else if (c == 0) {
+                // 字符串结束
+                break;
+            } else {
+                // 非打印字符，输出十六进制
+                std::cerr << "raw bytes: ";
+                std::fprintf(stderr, " %02x", c);
+                std::cerr << std::endl;
+            }
+        }
+        return name;
     }
 }
