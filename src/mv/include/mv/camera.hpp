@@ -78,6 +78,17 @@ public:
      */
     void PrintCameraDeviceInfo(const tSdkCameraDevInfo* info);
 
+    /**
+     * @brief 设置相机名称
+     * @param name 相机名称，不得超出 32 字节
+     */
+    void SetCameraName(std::string name);
+
+    /**
+     * @brief 读取相机名称
+     */
+    std::string ReadCameraName();
+
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
     void release();
 
@@ -97,6 +108,8 @@ private:
 
     // 相机配置文件路径
     std::string camera_config_path_;
+    // 相机名称
+    std::string camera_name_;
 
     // 重初始化尝试次数
     int reopen_count_;

@@ -72,6 +72,8 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
 
     PrintCameraDeviceInfo(&tCameraEnumList);
 
+    std::cout << "Camera name: " << this->ReadCameraName() << std::endl;
+
     CameraSetAeState(hCamera, false);
 
     // 初始化失败
@@ -285,4 +287,37 @@ void Camera::PrintCameraDeviceInfo(const tSdkCameraDevInfo* info) {
     printf("Serial Number (SN): %s\n", info->acSn);
     printf("Instance Index:    %u\n", info->uInstance);
     printf("=================================\n\n");
+}
+
+void Camera::SetCameraName(std::string name) {
+    if (CameraSetFriendlyName(hCamera, name.data()) != CAMERA_STATUS_SUCCESS) {
+        std::cerr << "Failed to set camera name!" << std::endl;
+    } else {
+        this->camera_name_ = name;
+    }
+}
+
+std::string Camera::ReadCameraName() {
+    char name[32] = { 0 };
+    // 获取失败
+    if (CameraGetFriendlyName(hCamera, name) != CAMERA_STATUS_SUCCESS) {
+        std::cerr << "Failed to get camera name!" << std::endl;
+        return "";
+    } else { // 获取成功
+        this->camera_name_ = name;
+        for (unsigned char c: name) {
+            if (c >= 32 && c <= 126) {
+                // 可打印字符
+            } else if (c == 0) {
+                // 字符串结束
+                break;
+            } else {
+                // 非打印字符，输出十六进制
+                std::cerr << "raw bytes: ";
+                std::fprintf(stderr, " %02x", c);
+                std::cerr << std::endl;
+            }
+        }
+        return name;
+    }
 }

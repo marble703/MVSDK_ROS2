@@ -64,7 +64,12 @@ int main(int argc, char** argv) {
         double fps = 1000000.0 / duration.count();
 
         // 实际使用可以改为 DEBUG
-        RCLCPP_DEBUG(logger, "Time: {%ld}us, FPS: {%lf}", duration.count(), fps);
+        RCLCPP_DEBUG(
+            logger,
+            "Time: {%ld}us, FPS: {%lf}",
+            duration.count(),
+            fps
+        );
         duration_msg.data = duration.count();
         duration_time_publisher->publish(duration_msg);
     }

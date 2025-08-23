@@ -2,7 +2,9 @@
 
 ## 开发中，不保证可用
 
-计划包装一层纯 `cpp` 接口, 再封装为 `ros2` 节点
+计划包装一层纯 `cpp` 接口, 再封装为 `ros2` 节点,现在节点处于纯测试用途
+
+目前只支持单相机
 
 此 ci 仅显示编译状态
 
@@ -73,6 +75,14 @@ rm -r mindvision-sdk
 
 [MindVision工业相机开发手册](
 https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%B8%9A%E7%9B%B8%E6%9C%BA%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C.pdf)
+
+## 问题
+
+1. 相机存在原因不明的 "预热" 效应, 如下图，在程序开始后不定时间后，帧时间抖动大幅降低。该时间在十几秒到一百秒以上不等。
+
+<img src="image.png" alt="描述文字" width="600" height="300">
+
+2. 发布图像导致帧时间延长超过 1.5 ms
 
 ## TODO： 
 
