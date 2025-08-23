@@ -51,7 +51,8 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
             CameraSdkInit(1);
             iStatus = CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
             if (iCameraCounts != 0) {
-                std::cout << "Camera detected while reinitializing!" << std::endl;
+                std::cout << "Camera detected while reinitializing!"
+                          << std::endl;
                 camera_detected_flag = true;
                 break;
             }
@@ -68,6 +69,9 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
 
     // 相机初始化。初始化成功后，才能调用任何其他相机相关的操作接口
     iStatus = CameraInit(&tCameraEnumList, -1, -1, &hCamera);
+
+    PrintCameraDeviceInfo(&tCameraEnumList);
+
     CameraSetAeState(hCamera, false);
 
     // 初始化失败
@@ -123,6 +127,7 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
 
 // TODO: 读一下SDK, 写异常处理
 bool Camera::setExposureTime(double exposure_time) {
+    // 非法曝光时间
     if (exposure_time < 0) {
         exposure_time = this->exposure_time_;
     }
@@ -261,4 +266,23 @@ std::shared_ptr<const cv::Mat> Camera::getFramePtr() {
     auto frame_ptr = std::make_shared<cv::Mat>(image);
     this->mtx_getFrame.unlock();
     return frame_ptr;
+}
+
+void Camera::PrintCameraDeviceInfo(const tSdkCameraDevInfo* info) {
+    if (info == NULL) {
+        printf("Error: Camera info pointer is NULL.\n");
+        return;
+    }
+
+    printf("\n=== Camera Device Information ===\n");
+    printf("Product Series:    %s\n", info->acProductSeries);
+    printf("Product Name:      %s\n", info->acProductName);
+    printf("Friendly Name:     %s\n", info->acFriendlyName);
+    printf("Link Name:         %s\n", info->acLinkName);
+    printf("Driver Version:    %s\n", info->acDriverVersion);
+    printf("Sensor Type:       %s\n", info->acSensorType);
+    printf("Port Type:         %s\n", info->acPortType);
+    printf("Serial Number (SN): %s\n", info->acSn);
+    printf("Instance Index:    %u\n", info->uInstance);
+    printf("=================================\n\n");
 }
