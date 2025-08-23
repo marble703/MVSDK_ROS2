@@ -30,7 +30,7 @@ public:
     ~Camera();
 
     // 初始化相机
-    bool init();
+    bool init(int try_reinit_time = 10, int wait_init_time = 500);
 
     // 设置曝光时间
     bool setExposureTime(double exposure_time = -1);
@@ -66,9 +66,6 @@ public:
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
     void release();
 
-    // 互斥锁，保护获取图像操作
-    std::mutex mtx_getFrame;
-
 private:
     // 监控是否重初始化的变量
     bool init_tag;
@@ -97,4 +94,7 @@ private:
     int channel;
     // 曝光时间
     double exposure_time_;
+
+    // 互斥锁，保护获取图像操作
+    std::mutex mtx_getFrame;
 };

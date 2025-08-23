@@ -2,6 +2,8 @@
 
 ## 开发中，不保证可用
 
+计划包装一层纯 `cpp` 接口, 再封装为 `ros2` 节点
+
 此 ci 仅显示编译状态
 
 [![ROS2-Humble](https://github.com/marble703/MVSDK_ROS2/actions/workflows/main.yml/badge.svg)](https://github.com/marble703/MVSDK_ROS2/actions/workflows/main.yml)
@@ -77,6 +79,8 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 原画面内录设置[](CameraSetDataDirectory/CameraSaveImage)
 
 被动获取图像[](CameraSetCallbackFunction)和触发读取分离
+
+白平衡设置[](CameraSetWbWindow)
 
 硬件 ROI
 

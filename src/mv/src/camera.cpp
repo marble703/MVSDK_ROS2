@@ -23,12 +23,12 @@ Camera::~Camera() {
     this->release();
 }
 
-bool Camera::init() {
+bool Camera::init(int try_reinit_time, int wait_init_time) {
     // 避免重初始化
     if (!this->init_tag) {
         std::cout << "Camera init start" << std::endl;
     } else {
-        std::cout << "Tried to reinitialize camera!" << std::endl;
+        std::cout << "Tried to reinitialize camera, skip!" << std::endl;
         return true;
     }
 
@@ -41,24 +41,26 @@ bool Camera::init() {
     std::cout << "count = " << iCameraCounts << std::endl;
     // 如果没有连接设备
     if (iCameraCounts == 0) {
-        bool flag = false;
+        bool camera_detected_flag = false;
         int fail_count = 1;
-        // 重试10次，每次间隔500ms
-        while (fail_count < 10) {
+        // 尝试重新连接
+        while (fail_count < try_reinit_time) {
             std::cerr << "No camera detected! Retry " << fail_count << " times"
                       << std::endl;
 
             CameraSdkInit(1);
             iStatus = CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
             if (iCameraCounts != 0) {
-                std::cout << "Camera detected!" << std::endl;
-                flag = true;
+                std::cout << "Camera detected while reinitializing!" << std::endl;
+                camera_detected_flag = true;
                 break;
             }
             fail_count++;
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(wait_init_time)
+            );
         }
-        if (flag == false) {
+        if (camera_detected_flag == false) {
             std::cerr << "No camera detected!(>_<)!" << std::endl;
             exit(-1);
         }
@@ -71,7 +73,7 @@ bool Camera::init() {
     // 初始化失败
     std::cout << "state = " << iStatus << std::endl;
     if (iStatus != CAMERA_STATUS_SUCCESS) {
-        // std::cerr << "Camera init failed!(>_<)!" << std::endl;
+        std::cerr << "Camera init failed!(>_<)!" << std::endl;
         exit(-1);
     }
 
