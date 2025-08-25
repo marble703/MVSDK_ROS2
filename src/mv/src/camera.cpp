@@ -2,12 +2,12 @@
 
 Camera::Camera(
     std::string camera_config_path,
-    std::shared_ptr<cv::Mat> frame_ptr,
-    double exposure_time
+    std::string data_dirname,
+    std::shared_ptr<cv::Mat> frame_ptr
 ):
     camera_config_path_(camera_config_path),
-    frame_ptr_(frame_ptr),
-    exposure_time_(exposure_time) {
+    data_dirname_(data_dirname),
+    frame_ptr_(frame_ptr) {
     this->init_tag = false;
     this->iCameraCounts = 1;
     this->iStatus = -1;
@@ -33,7 +33,7 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
     }
 
     // 初始化 mv SDK
-    // TODO: 设置全局初始化检查，这个只需要初始化一次
+    // TODO: 设置全局初始化检查，这个只需要初始化一次，但是多初始化几次也不会报错，懒得管了
     CameraSdkInit(1);
     // 枚举设备，建立设备列表
     iStatus = CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
@@ -48,7 +48,6 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
             std::cerr << "No camera detected! Retry " << fail_count << " times"
                       << std::endl;
 
-            CameraSdkInit(1);
             iStatus = CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
             if (iCameraCounts != 0) {
                 std::cout << "Camera detected while reinitializing!"
@@ -67,6 +66,7 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
         }
     }
 
+    // 在此之前可调用 CameraIsOpened 函数检测相机是否被其他程序占用, 但是该报错可以直接在 CameraInit 的返回值中读出, 因此不使用
     // 相机初始化。初始化成功后，才能调用任何其他相机相关的操作接口
     iStatus = CameraInit(&tCameraEnumList, -1, -1, &hCamera);
 
@@ -320,4 +320,7 @@ std::string Camera::ReadCameraName() {
         }
         return name;
     }
+}
+bool Camera::SetCameraDataDirectory(std::string data_dirname) {
+    return CameraSetDataDirectory(data_dirname.data()) == CAMERA_STATUS_SUCCESS;
 }
