@@ -24,8 +24,8 @@ class Camera {
 public:
     Camera(
         std::string camera_config_path = "./config/camera.config",
-        std::shared_ptr<cv::Mat> frame_ptr = nullptr,
-        double exposure_time = -1
+        std::string data_dirname = "./",
+        std::shared_ptr<cv::Mat> frame_ptr = nullptr
     );
     ~Camera();
 
@@ -89,6 +89,8 @@ public:
      */
     std::string ReadCameraName();
 
+    bool SetCameraDataDirectory(std::string data_dirname);
+
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
     void release();
 
@@ -108,6 +110,8 @@ private:
 
     // 相机配置文件路径
     std::string camera_config_path_;
+    // 相机数据文件的存储目录
+    std::string data_dirname_;
     // 相机名称
     std::string camera_name_;
 

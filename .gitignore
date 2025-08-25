@@ -1,14 +1,20 @@
+# 编译结果
 build
 install
 log
 
+# 缓存与工作区配置
 __pycache__
 .vscode
 .cache
-
-Data
 Camera
-debug
 
-camera.config
+# 测试数据
+Data
+
+# 调试文件
+debug
 gdb.txt
+
+# 配置文件
+camera.config
