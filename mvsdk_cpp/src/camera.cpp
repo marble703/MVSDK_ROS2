@@ -1,4 +1,4 @@
-#include <mv/camera.hpp>
+#include "camera.hpp"
 
 Camera::Camera(
     std::string camera_config_path,
@@ -111,7 +111,8 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
     // 万一文件位置错了
     if (iStatus != CAMERA_STATUS_SUCCESS) {
         std::cerr << "Couldn't read camera parameter from file!!!" << std::endl;
-        exit(-1);
+        std::cerr << "Tried to read " << camera_config_path_ << std::endl;
+        // exit(-1);
     } else {
         std::cout << "Camera parameter read success" << std::endl;
     }

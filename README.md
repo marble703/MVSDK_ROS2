@@ -62,7 +62,7 @@ rm -r mindvision-sdk
 
 ## 录制工具
 
-参见[RECORDER_README.md](./RECORDER_README.md)
+参见[RECORDER_README.md](./document/RECORDER_README.md)
 
 ## 注意事项
 
@@ -78,9 +78,9 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 
 ## 问题
 
-1. 相机存在原因不明的 "预热" 效应, 如下图，在程序开始后不定时间后，帧时间抖动大幅降低。该时间在十几秒到一百秒以上不等。
+1. 相机有时存在原因不明的 "预热" 效应, 如下图，在程序开始后不定时间后，帧时间抖动大幅降低。该时间在十几秒到一百秒以上不等。有时还会在启动一段时间后再次出现抖动增加再减少的现象。目前推测与上次为正确关闭相机导致缓存未释放等原因有关
 
-<img src="image.png" alt="描述文字" width="600" height="300">
+<img src="./document/img/image.png" alt="描述文字" width="600" height="300">
 
 2. 发布图像导致帧时间延长超过 1.5 ms
 
@@ -99,5 +99,3 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 黑白相机支持(mono sensor)
 
 多相机支持
-
-昵称修改读取
