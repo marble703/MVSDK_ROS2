@@ -23,12 +23,12 @@ Camera::~Camera() {
     this->release();
 }
 
-bool Camera::init(int try_reinit_time, int wait_init_time) {
+bool Camera::init(int try_reinit_time, int wait_init_time, bool force) {
     // 避免重初始化
-    if (!this->init_tag) {
+    if (!this->init_tag || force) {
         std::cout << "Camera init start" << std::endl;
     } else {
-        std::cout << "Tried to reinitialize camera, skip!" << std::endl;
+        std::cerr << "Tried to reinitialize camera, skip!" << std::endl;
         return true;
     }
 
@@ -112,7 +112,7 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
     if (iStatus != CAMERA_STATUS_SUCCESS) {
         std::cerr << "Couldn't read camera parameter from file!!!" << std::endl;
         std::cerr << "Tried to read " << camera_config_path_ << std::endl;
-        // exit(-1);
+        exit(-1);
     } else {
         std::cout << "Camera parameter read success" << std::endl;
     }
@@ -134,8 +134,10 @@ bool Camera::setExposureTime(double exposure_time) {
     if (exposure_time < 0) {
         exposure_time = this->exposure_time_;
     }
-    CameraSetExposureTime(hCamera, exposure_time);
-    std::cout << "Exposure time set to " << exposure_time << std::endl;
+    if (CameraSetExposureTime(hCamera, exposure_time) == CAMERA_STATUS_SUCCESS)
+    {
+        this->exposure_time_ = exposure_time;
+    }
     return true;
 }
 
@@ -155,7 +157,7 @@ void Camera::release() {
 void Camera::readFrame(std::shared_ptr<int> status) {
     // 如果相机未初始化
     if (this->init_tag == false) {
-        // std::cerr << "Camera not initialized properly!" << std::endl;
+        std::cerr << "Camera not initialized properly!" << std::endl;
         if (status != nullptr) {
             *status = mindvision::ReadFrameStatus::UNINIT;
         }

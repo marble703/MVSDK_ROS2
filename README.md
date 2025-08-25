@@ -22,15 +22,16 @@ MindVision SUA133GC
 
 ### ROS2
 
-小鱼一键安装
+小鱼一键安装(推荐)
 
-```bash
+```sh
+
 wget http://fishros.com/install -O fishros && . fishros
 ```
 
 或者
 
-```bash
+```sh
 # ros-humble-desktop
 echo "deb [arch=$(dpkg --print-architecture)] https://repo.huaweicloud.com/ros2/ubuntu/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 sudo apt install curl gnupg2 -y
@@ -50,7 +51,7 @@ rosdep install --from-paths . --ignore-src -r -y
 
 可在[这里](https://www.mindvision.com.cn/category/software/sdk-installation-package/)找到
 
-```bash
+```sh
 mkdir mindvision-sdk
 wget https://www.mindvision.com.cn/wp-content/uploads/2023/08/linuxSDK_V2.1.0.37.tar.gz -O mindvision-sdk/SDK.tar.gz
 tar -zxvf mindvision-sdk/SDK.tar.gz --directory=mindvision-sdk
@@ -66,10 +67,16 @@ rm -r mindvision-sdk
 
 ## 注意事项
 
+小鱼一键安装有部分功能依赖于新版本 `pip`, 如果遇到奇怪红色报错可以尝试更新 `pip`
+
+```sh
+pip install --upgrade pip
+```
+
 在快于最大 FPS 的时间间隔下读取缓冲区会读取失败，这里包装了一层，会输出上一帧代替并警告
 
-如果出现奇怪的依赖问题，可以尝试运行 `setup_env.sh` 
-该脚本会重设 python 环境，可以解决 conda 造成的 python 解释器问题
+如果出现奇怪的依赖问题，可以尝试运行 `script/setup_env.sh` 
+该脚本会重设 python 环境，可以解决 conda 系环境管理工具造成的 python 解释器路径问题
 
 此脚本适配了 `zsh` 和 `bash`
 

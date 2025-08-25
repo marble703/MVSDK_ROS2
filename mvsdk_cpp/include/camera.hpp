@@ -33,9 +33,14 @@ public:
      * @brief 初始化相机
      * @param try_reinit_time 重试连接次数
      * @param wait_init_time 重试等待时间
+     * @param force 是否无视重初始化警告
      * @return 初始化成功
      */
-    bool init(int try_reinit_time = 10, int wait_init_time = 500);
+    bool init(
+        int try_reinit_time = 10,
+        int wait_init_time = 500,
+        bool force = false
+    );
 
     /**
      * @brief 读取一帧图像到类内缓存
@@ -89,6 +94,11 @@ public:
      */
     std::string ReadCameraName();
 
+    /**
+     * @brief 设置相机数据目录
+     * @param data_dirname 目录
+     * @return 成功 
+     */
     bool SetCameraDataDirectory(std::string data_dirname);
 
     // 释放相机资源，一般不需要手动调用，析构函数会自动调用
