@@ -65,6 +65,10 @@ rm -r mindvision-sdk
 
 参见[RECORDER_README.md](./document/RECORDER_README.md)
 
+## cpp 接口示例
+
+[源代码](mvsdk_cpp/example)位于 `mvsdk_cpp/example` 下，[可执行文件](build/mvsdk_cpp/bin)在 `build/mvsdk_cpp/bin` 下
+
 ## 注意事项
 
 小鱼一键安装有部分功能依赖于新版本 `pip`, 如果遇到奇怪红色报错可以尝试更新 `pip`
