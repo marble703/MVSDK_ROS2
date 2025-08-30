@@ -275,6 +275,11 @@ void Camera::getFrame(std::shared_ptr<cv::Mat> frame_ptr) {
     this->mtx_getFrame.unlock();
 }
 
+cv::Mat Camera::imread() {
+    this->readFrame();
+    return this->getFrame();
+}
+
 std::shared_ptr<const cv::Mat> Camera::getFramePtr() {
     while (this->mtx_getFrame.try_lock() == false) {
         std::cerr << "locked when camera get frame!" << std::endl;

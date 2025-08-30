@@ -72,6 +72,13 @@ public:
     std::shared_ptr<const cv::Mat> getFramePtr();
 
     /**
+     * @brief 简化接口，直接读取一帧图像
+     * 
+     * @return cv::Mat 图像
+     */
+    cv::Mat imread();
+
+    /**
      * @brief 设置曝光时间
      * @param exposure_time 曝光时间, 单位微妙
      * @return 设置成功

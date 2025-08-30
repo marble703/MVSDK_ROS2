@@ -6,8 +6,7 @@ int main(){
     cv::Mat frame;
 
     while (true){
-        camera.readFrame();
-        frame = camera.getFrame();
+        frame = camera.imread();
         cv::imshow("frame", frame);
         cv::waitKey(1);
     }
