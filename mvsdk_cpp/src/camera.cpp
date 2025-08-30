@@ -115,9 +115,9 @@ bool Camera::init(int try_reinit_time, int wait_init_time, bool force) {
         try {
             std::filesystem::path p(camera_config_path_);
             std::cout << "Tried to read " << camera_config_path_
-                  << " (abs: " << std::filesystem::absolute(p).string() << ")"
-                  << std::endl;
-        } catch (const std::exception &e) {
+                      << " (abs: " << std::filesystem::absolute(p).string()
+                      << ")" << std::endl;
+        } catch (const std::exception& e) {
             std::cerr << "Tried to read " << camera_config_path_
                   << " (failed to get absolute path: " << e.what() << ")"
                   << std::endl;

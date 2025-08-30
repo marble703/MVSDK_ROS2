@@ -27,8 +27,8 @@ def generate_launch_description():
 
     # 相机节点
     camera_node = Node(
-        package='mv',
-        executable='mv_node',
+        package='mvsdk_ros2',
+        executable='mvsdk_ros2_node',
         name='mv_camera',
         output='screen',
         parameters=[
@@ -38,7 +38,7 @@ def generate_launch_description():
 
     # 录制节点
     recorder_node = Node(
-        package='mv',
+        package='mvsdk_ros2',
         executable='mv_recorder_node',
         name='mv_recorder',
         output='screen',

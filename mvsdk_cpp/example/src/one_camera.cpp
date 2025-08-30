@@ -1,7 +1,7 @@
 #include "camera.hpp"
 
 int main(){
-    std::string camera_config_path = "mvsdk_ros2/config/camera.config";
+    std::string camera_config_path = "config/camera.config";
     Camera camera(camera_config_path);
     cv::Mat frame;
 

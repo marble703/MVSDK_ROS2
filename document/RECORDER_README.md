@@ -2,7 +2,7 @@
 
 ## 概述
 
-`mv_recorder_node` 是一个用于录制 `mv/raw_image` 话题图像的 ROS 2 节点。它可以将接收到的 `sensor_msgs::msg::Image` 消息保存为图像文件。
+`mvsdk_ros2_recorder_node` 是一个用于录制 `mv/raw_image` 话题图像的 ROS 2 节点。它可以将接收到的 `sensor_msgs::msg::Image` 消息保存为图像文件。
 
 ## 功能特性
 
@@ -18,19 +18,19 @@
 ### 1. 单独启动录制节点
 
 ```bash
-ros2 run mv mv_recorder_node
+ros2 run mvsdk_ros2 mvsdk_ros2_recorder_node
 ```
 
 ### 2. 使用启动文件（同时启动相机和录制节点）
 
 ```bash
-ros2 launch mv camera_recorder.py
+ros2 launch mvsdk_ros2 camera_recorder.py
 ```
 
 ### 3. 带参数启动
 
 ```bash
-ros2 launch mv camera_recorder.py \
+ros2 launch mvsdk_ros2 camera_recorder.py \
     output_dir:=my_recordings \
     image_format:=png \
     auto_start_recording:=true
@@ -72,12 +72,12 @@ ros2 service call /stop_recording std_srvs/srv/Empty
 
 1. 启动相机节点：
 ```bash
-ros2 run mv mv_node
+ros2 run mvsdk_ros2 mvsdk_ros2_node
 ```
 
 2. 启动录制节点：
 ```bash
-ros2 run mv mv_recorder_node
+ros2 run mvsdk_ros2 mv_recorder_node
 ```
 
 3. 开始录制：
