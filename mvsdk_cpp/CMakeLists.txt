@@ -44,3 +44,8 @@ target_link_libraries(mv PUBLIC
 
 install(DIRECTORY include/ DESTINATION include)
 install(TARGETS mv ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+
+# 如果存在 example 目录，自动编译
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/example/CMakeLists.txt")
+  add_subdirectory(example)
+endif()

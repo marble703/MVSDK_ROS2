@@ -95,7 +95,7 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 
 原画面内录设置[](CameraSetDataDirectory/CameraSaveImage)
 
-被动获取图像[](CameraSetCallbackFunction)和触发读取分离
+被动获取图像[](CameraSetCallbackFunction)
 
 白平衡设置[](CameraSetWbWindow)
 
@@ -103,6 +103,8 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 
 更多参数接口(白平衡/饱和度/gamma/增益...)
 
-黑白相机支持(mono sensor)
+黑白相机支持(mono sensor)(等有这种相机再做)
 
 多相机支持
+
+接口抽象
