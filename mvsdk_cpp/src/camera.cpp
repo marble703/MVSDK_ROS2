@@ -23,12 +23,12 @@ Camera::~Camera() {
     this->release();
 }
 
-bool Camera::init(int try_reinit_time, int wait_init_time) {
+bool Camera::init(int try_reinit_time, int wait_init_time, bool force) {
     // 避免重初始化
-    if (!this->init_tag) {
+    if (!this->init_tag || force) {
         std::cout << "Camera init start" << std::endl;
     } else {
-        std::cout << "Tried to reinitialize camera, skip!" << std::endl;
+        std::cerr << "Tried to reinitialize camera, skip!" << std::endl;
         return true;
     }
 
@@ -108,11 +108,21 @@ bool Camera::init(int try_reinit_time, int wait_init_time) {
     }
     // 用配置文件导入相机参数
     iStatus = CameraReadParameterFromFile(hCamera, camera_config_path_.data());
-    // 万一文件位置错了
+    // 如果文件位置错了
     if (iStatus != CAMERA_STATUS_SUCCESS) {
         std::cerr << "Couldn't read camera parameter from file!!!" << std::endl;
-        std::cerr << "Tried to read " << camera_config_path_ << std::endl;
-        // exit(-1);
+        // 打印尝试读取的配置文件路径及其绝对路径
+        try {
+            std::filesystem::path p(camera_config_path_);
+            std::cout << "Tried to read " << camera_config_path_
+                      << " (abs: " << std::filesystem::absolute(p).string()
+                      << ")" << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "Tried to read " << camera_config_path_
+                  << " (failed to get absolute path: " << e.what() << ")"
+                  << std::endl;
+        }
+        exit(-1);
     } else {
         std::cout << "Camera parameter read success" << std::endl;
     }
@@ -134,8 +144,15 @@ bool Camera::setExposureTime(double exposure_time) {
     if (exposure_time < 0) {
         exposure_time = this->exposure_time_;
     }
-    CameraSetExposureTime(hCamera, exposure_time);
-    std::cout << "Exposure time set to " << exposure_time << std::endl;
+    if (CameraSetExposureTime(hCamera, exposure_time) == CAMERA_STATUS_SUCCESS)
+    {
+        this->exposure_time_ = exposure_time;
+        std::cout << "Set exposure time success: " << exposure_time << " us"
+                  << std::endl;
+    } else {
+        std::cerr << "Set exposure time failed: " << exposure_time << " us"
+                  << std::endl;
+    }
     return true;
 }
 
@@ -155,7 +172,7 @@ void Camera::release() {
 void Camera::readFrame(std::shared_ptr<int> status) {
     // 如果相机未初始化
     if (this->init_tag == false) {
-        // std::cerr << "Camera not initialized properly!" << std::endl;
+        std::cerr << "Camera not initialized properly!" << std::endl;
         if (status != nullptr) {
             *status = mindvision::ReadFrameStatus::UNINIT;
         }
@@ -256,6 +273,11 @@ void Camera::getFrame(std::shared_ptr<cv::Mat> frame_ptr) {
     }
     *frame_ptr = image.clone();
     this->mtx_getFrame.unlock();
+}
+
+cv::Mat Camera::imread() {
+    this->readFrame();
+    return this->getFrame();
 }
 
 std::shared_ptr<const cv::Mat> Camera::getFramePtr() {

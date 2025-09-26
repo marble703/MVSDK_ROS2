@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>mv</name>
+  <name>mvsdk_ros2</name>
   <version>0.0.0</version>
   <description>MindVision SDK for ROS 2</description>
-  <author email="703342335@qq.com">marble703</author>
-  <maintainer email="703342335@qq.com">marble703</maintainer>
+  <author email="23070626@hdu.edu.cn">marble703</author>
+  <maintainer email="23070626@hdu.edu.cn">marble703</maintainer>
   <license>Proprietary</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

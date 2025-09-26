@@ -8,15 +8,15 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     config = os.path.join(
-        get_package_share_directory('mv'),
+        get_package_share_directory('mvsdk_ros2'),
         'config', 'config.yaml'
     )
 
     load_nodes=GroupAction(
         actions=[
             Node(
-                package='mv',
-                executable='mv_node',
+                package='mvsdk_ros2',
+                executable='mvsdk_ros2_node',
                 output='screen',
                 parameters=[config],
                 emulate_tty=True,

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(mv)
+project(mvsdk_ros2)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
@@ -36,7 +36,7 @@ ament_auto_find_build_dependencies()
 
 # 创建主节点
 ament_auto_add_executable(${PROJECT_NAME}_node
-  src/${PROJECT_NAME}_node.cpp
+  src/mvsdk_ros2_node.cpp
 )
 
 # 查找 MindVision 驱动
