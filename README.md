@@ -61,7 +61,17 @@ cd mindvision-sdk && sudo bash ./install.sh && cd ..
 rm -r mindvision-sdk
 ```
 
-## 录制工具
+## 启动
+
+记得先 `source` 
+
+```sh
+ros2 launch mvsdk_ros2 launch.py
+```
+
+### 启动相机节点
+
+### 录制工具
 
 参见[RECORDER_README.md](./document/RECORDER_README.md)
 
@@ -79,19 +89,21 @@ pip install --upgrade pip
 
 在快于最大 FPS 的时间间隔下读取缓冲区会读取失败，这里包装了一层，会输出上一帧代替并警告
 
-如果出现奇怪的依赖问题，可以尝试运行 `script/setup_env.sh` 
-该脚本会重设 python 环境，可以解决 conda 系环境管理工具造成的 python 解释器路径问题
-
+如果出现奇怪的依赖问题，可以尝试运行 `script/setup_env.sh`,
+该脚本会重设 python 环境，可以解决 conda 系环境管理工具造成的 python 解释器路径问题,
 此脚本适配了 `zsh` 和 `bash`
 
+官方文档，详细到可以当教程
 [MindVision工业相机开发手册](
 https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%B8%9A%E7%9B%B8%E6%9C%BA%E5%BC%80%E5%8F%91%E6%89%8B%E5%86%8C.pdf)
 
+使用 `zshell` 记得要 `source install/setup.zsh` 而不是 `.bash`
+
 ## 问题
 
-1. 相机有时存在原因不明的 "预热" 效应, 如下图，在程序开始后不定时间后，帧时间抖动大幅降低。该时间在十几秒到一百秒以上不等。有时还会在启动一段时间后再次出现抖动增加再减少的现象。目前推测与上次为正确关闭相机导致缓存未释放等原因有关
+1. 相机有时存在原因不明的 "预热" 效应, 如下图，在程序开始后不定时间后，帧时间抖动大幅降低。该时间在十几秒到一百秒以上不等。有时还会在启动一段时间后再次出现抖动增加再减少的现象。目前推测与上次未正确关闭相机导致缓存未释放等原因有关。(下图的平均帧时长在重启相机后明显变高是因为手动加了 1ms 延时)
 
-<img src="./document/img/image.png" alt="描述文字" width="600" height="300">
+<img src="./document/img/image.png" alt="预热效应" width="600" height="300">
 
 2. 发布图像导致帧时间延长超过 1.5 ms
 
