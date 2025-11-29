@@ -127,6 +127,7 @@ bool Camera::init(int try_reinit_time, int wait_init_time, bool force) {
         std::cout << "Camera parameter read success" << std::endl;
     }
     this->init_tag = true;
+    this->readFrame();
     this->image = this->getFrame();
     if (this->image.empty()) {
         std::cerr << "First try to get frame failed!" << std::endl;
