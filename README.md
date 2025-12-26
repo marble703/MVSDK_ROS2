@@ -1,6 +1,6 @@
 # mindvision SDK ROS2 开发记录
 
-## 开发中，不保证可用
+## 由于队内已有人写好了更完善的相机节点，此仓库更新暂缓，仅作为个人使用
 
 计划包装一层纯 `cpp` 接口, 再封装为 `ros2` 节点,现在节点处于纯测试用途
 
@@ -22,7 +22,7 @@ MindVision SUA133GC
 
 ### ROS2
 
-小鱼一键安装(推荐)
+小鱼一键安装
 
 ```sh
 
@@ -108,8 +108,6 @@ https://www.mindvision.com.cn/wp-content/uploads/2023/08/MindVision%E5%B7%A5%E4%
 2. 发布图像导致帧时间延长超过 1.5 ms
 
 ## TODO： 
-
-原画面内录设置[](CameraSetDataDirectory/CameraSaveImage)
 
 被动获取图像[](CameraSetCallbackFunction)
 

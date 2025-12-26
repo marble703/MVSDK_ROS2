@@ -5,8 +5,14 @@ int main(){
     Camera camera(camera_config_path);
     cv::Mat frame;
 
+    
+
     while (true){
         frame = camera.imread();
+        if (frame.empty()){
+            std::cerr << "Failed to read frame!" << std::endl;
+            continue;
+        }
         cv::imshow("frame", frame);
         cv::waitKey(1);
     }

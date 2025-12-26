@@ -58,7 +58,7 @@ target_include_directories(${PROJECT_NAME}_node PRIVATE
 
 # 链接主节点库文件
 target_link_libraries(${PROJECT_NAME}_node
-  ${CMAKE_SOURCE_DIR}/../build/mvsdk_cpp/libmv.a
+  ${CMAKE_BINARY_DIR}/../mvsdk_cpp/libmv.a
   MVSDK
   ${OpenCV_LIBS}
 )

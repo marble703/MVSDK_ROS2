@@ -119,8 +119,8 @@ bool Camera::init(int try_reinit_time, int wait_init_time, bool force) {
                       << ")" << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "Tried to read " << camera_config_path_
-                  << " (failed to get absolute path: " << e.what() << ")"
-                  << std::endl;
+                      << " (failed to get absolute path: " << e.what() << ")"
+                      << std::endl;
         }
         exit(-1);
     } else {
@@ -194,8 +194,8 @@ void Camera::readFrame(std::shared_ptr<int> status) {
     if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1)
         != CAMERA_STATUS_SUCCESS)
     {
-        std::cerr << "Camera get frame failed! Tried to use last image!"
-                  << std::endl;
+        // std::cerr << "Camera get frame failed! Tried to use last image!"
+        //           << std::endl;
         // 从未读取到图像
         if (this->image.empty()) {
             std::cerr << "Last image is empty, no image had been received!!!"
@@ -209,9 +209,8 @@ void Camera::readFrame(std::shared_ptr<int> status) {
         // 读到过图像，退化为使用上一次读取到的图像
         // TODO: 加一个时间戳，超时则不使用
         // 这一般是读取频率过高导致
-        else
-        {
-            std::cout << "Last image is not empty, using it!" << std::endl;
+        else {
+            // std::cout << "Last image is not empty, using it!" << std::endl;
             if (status != nullptr) {
                 *status = mindvision::ReadFrameStatus::LAST;
             }
@@ -222,8 +221,7 @@ void Camera::readFrame(std::shared_ptr<int> status) {
     }
 
     // 正常获取到图像
-    else
-    {
+    else {
         // 处理图像
         CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
 
